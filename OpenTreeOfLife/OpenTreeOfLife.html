@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<!-- Copyright (c) 2015, Spencer Lank. All rights reserved. -->
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Open Tree Of Life Snippets</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<style>
+</style>
+<script>
+
+function main() {
+
+var otolBaseUrl = 'http://api.opentreeoflife.org/v2' // otol = Open Tree Of Life
+var sUrl; // s = String data type
+var lOtt_ids; // l = long
+
+/* about (tree of life) */
+/* Return information about the current draft tree itself.
+ */
+
+sUrl = otolBaseUrl + '/tree_of_life/about';
+
+jQuery.post( sUrl, { study_list: false }, function( data ) {
+	console.log ('about (tree of life)\nstudy_list: true');
+	console.log ( data );
+});
+
+jQuery.post( sUrl, { study_list: true }, function( data ) {
+	console.log ('about (tree of life)\nstudy_list: false');
+	console.log ( data );
+});
+
+
+/* mrca */
+/* Return the most recent common ancestor of a set of nodes in the draft tree.
+ */
+
+sUrl = otolBaseUrl + '/tree_of_life/mrca';
+
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({ 'node_ids':[4] }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	success: function( data ) {
+		console.log('mrca\npassing node_ids');
+		console.log( data );
+	}
+})
+
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({ 'ott_ids':[304358] }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	success: function( data ) {
+		console.log('mrca\npassing ott_ids');
+		console.log( data );
+	}
+})
+
+// This shorthand ajax method (.post) doesn't seem to work
+/*
+jQuery.post( sUrl, JSON.stringify({ 'ott_ids':[93302] }), function( data ) {
+	console.log ('mrca');
+	console.log ( data );
+}, 'json');
+*/
+
+
+/* subtree (tree of life)
+ * Return the complete subtree below a given node.
+ */
+
+sUrl = otolBaseUrl + '/tree_of_life/subtree';
+
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({'node_id': 764517 }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	success: function( data ) {
+		console.log('subtree (tree of life)\npassing node_id');
+		console.log( data );
+	}
+})
+
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({ 'ott_id': 344064 }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+})
+	.done(function( data ) {
+		console.log('subtree (tree of life)\npassing ott_id')
+		console.log( data );
+		var html = '<p>' + data.newick + '<p>';
+		jQuery('body').html( html );
+		var newick = data.newick;
+		var newickLen = newick.length;
+		var myArray = '[';
+		var level = 0;
+		var iChar;
+		var iItem = '';
+		var reverseString = '';
+		for ( var i = newickLen - 1; i != 0; i-- ) {
+			iChar = newick[i];
+			if ( iChar == ')' ) {
+				if (iItem != '') {
+					reverseString = '';
+					for (var j = iItem.length - 1; j != 0; j--) {
+						reverseString = reverseString + iItem[j];
+					}
+					myArray = myArray + '"' + reverseString + '",[';
+					console.log( 'level ' + level + ', Item: ' + reverseString );
+					iItem = '';
+				}
+				level++;
+			} else if ( iChar == '(') {
+				if ( newick[ i - 1 ] == '(') {
+					if (iItem != '') {
+						reverseString = '';
+						for (var j = iItem.length - 1; j != 0; j--) {
+							reverseString = reverseString + iItem[j];
+						}
+						myArray = myArray + '"' + reverseString + '"]';
+						console.log( 'level ' + level + ', Item: ' + reverseString );
+						iItem = '';
+					}
+					level--;
+				} else {
+					if (iItem != '') {
+						reverseString = '';
+						for (var j = iItem.length - 1; j != 0; j--) {
+							reverseString = reverseString + iItem[j];
+						}
+						myArray = myArray + '"' + reverseString + '"],';
+						console.log( 'level ' + level + ', Item: ' + reverseString );
+						iItem = '';
+					}
+					level--;
+				}
+			} else if ( iChar == ',') {
+				if (iItem != '') {
+					reverseString = '';
+					for (var j = iItem.length - 1; j != 0; j--) {
+						reverseString = reverseString + iItem[j];
+					}
+					myArray = myArray + '"' + reverseString + '",';
+					console.log( 'level ' + level + ', Item: ' + reverseString );
+					iItem = '';
+				}
+			} else {
+				iItem = iItem + iChar;
+			}
+		}
+		myArray = myArray + "]]";
+		//myArray = '["Zaglossus_ott56557",["Zaglossus_bruijni_ott56557","Zaglossus_attenboroughi_ott361520","Zaglossus_bartoni_ott361520"],"Tachyglossus_ott1604",["Tachyglossus_acanthion_ott554132","Tachyglossus_lawesii_ott554132","Tachyglossus_aculeatus_ott1603",["Tachyglossus_aculeatus_aculeatus_ott7962"],"Tachyglossus_ineptus_ott554132","Tachyglossus_bruijni_ott554132","Tachyglossus_setosus_ott554132","Tachyglossus_multiaculeatus_ott554132"]]';
+		console.log(myArray);
+		var newArray = jQuery.parseJSON(myArray);
+		console.log(newArray);
+  });
+
+/*
+
+["Tachyglossidae_ott344064",
+	["Zaglossus_ott56557",
+		["Zaglossus_bruijni_ott56557",
+		"Zaglossus_attenboroughi_ott361520",
+		"Zaglossus_bartoni_ott361520"
+		],
+	"Tachyglossus_ott1604",
+		["Tachyglossus_acanthion_ott554132",
+		"Tachyglossus_lawesii_ott554132",
+		"Tachyglossus_aculeatus_ott1603",
+			["Tachyglossus_aculeatus_aculeatus_ott7962"
+			],
+		"Tachyglossus_ineptus_ott554132",
+		"Tachyglossus_bruijni_ott554132",
+		"Tachyglossus_setosus_ott554132",
+		"Tachyglossus_multiaculeatus_ott554132"
+		],
+	]
+]
+
+Newick from Server:
+(
+	(
+		Tachyglossus_multiaculeatus_ott5541320,
+		Tachyglossus_setosus_ott5541323,
+		Tachyglossus_bruijni_ott5541322,
+		Tachyglossus_ineptus_ott5541321,
+		(
+			Tachyglossus_aculeatus_aculeatus_ott79623
+		)
+		Tachyglossus_aculeatus_ott16038,
+		Tachyglossus_lawesii_ott5541325,
+		Tachyglossus_acanthion_ott5541324
+	)
+	Tachyglossus_ott16047,
+	(
+		Zaglossus_bartoni_ott3615201,
+		Zaglossus_attenboroughi_ott3615204,
+		Zaglossus_bruijni_ott565578,
+	)
+	Zaglossus_ott565577
+)
+Tachyglossidae_ott344064;
+
+Convert to Array
+An element preceding an array is the parent of it.
+myArray =
+	[
+		Tachyglossidae_ott344064,
+		[
+			Zaglossus_ott565577,
+			[
+				Zaglossus_bruijni_ott565578,
+				Zaglossus_attenboroughi_ott3615204,
+				Zaglossus_bartoni_ott3615201,
+			],
+			Tachyglossus_ott16047,
+			[
+				Tachyglossus_acanthion_ott5541324,
+				Tachyglossus_lawesii_ott5541325,
+				Tachyglossus_aculeatus_ott16038,
+				[
+					Tachyglossus_aculeatus_aculeatus_ott79623,
+				],
+				Tachyglossus_ineptus_ott5541321,
+				Tachyglossus_bruijni_ott5541322,
+				Tachyglossus_setosus_ott5541323,
+				Tachyglossus_multiaculeatus_ott5541320,
+			],
+		],
+	]
+*/
+
+
+/* induced_subtree
+/* Return the induced subtree on the draft tree that relates a set of nodes.
+ */
+
+sUrl = otolBaseUrl + '/tree_of_life/induced_subtree';
+
+/*
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({'node_ids': [764517] }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	success: function( data ) {
+		console.log('induced_subtree\npassing node_id');
+		console.log( data );
+	}
+})
+*/
+
+jQuery.ajax({
+	type: 'POST',
+	url: sUrl,
+	data: JSON.stringify({ 'ott_ids': [292466, 501678, 267845, 666104, 316878, 102710, 176458] }),
+	contentType: "application/json; charset=utf-8",
+	dataType: "json",
+	success: function( data ) {
+		console.log('induced_subtree\npassing ott_id')
+		console.log( data );
+		var html = '<p>' + data.newick + '<p>';
+		jQuery('body').html( html );
+	}
+})
+
+} // End main()
+
+
+
+</script> 
+</head>
+<body onload='main()'>
+</body>
+
+</html>
